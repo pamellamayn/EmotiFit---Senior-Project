@@ -1,77 +1,56 @@
-from flask import Flask, request, redirect, session
 import requests
+from urllib.parse import urlencode
 
-app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Set a secret key for session management
+# Replace these placeholders with your actual Client ID and Client Secret (make secure later)
+CLIENT_ID = '30198eecba5b46c989f757e00ef17090'  
+CLIENT_SECRET = '6e1eb9caf0e146c3a67e6f9499b4bf70'  
+REDIRECT_URI = 'http://localhost:5000/callback'  
 
-# Spotify API credentials and URLs (replace with your actual credentials)
-CLIENT_ID = '30198eecba5b46c989f757e00ef17090'
-CLIENT_SECRET = '6e1eb9caf0e146c3a67e6f9499b4bf70'
-REDIRECT_URI = 'http://localhost:5000/callback'
+# Authorization URL and Token URL from Spotify API
 AUTH_URL = 'https://accounts.spotify.com/authorize'
 TOKEN_URL = 'https://accounts.spotify.com/api/token'
 
-@app.route('/')
-def home():
-    # Check if the user has already authenticated
-    if 'access_token' in session:
-        return f"Access token: {session['access_token']}"
-    else:
-        # Redirect to Spotify's authorization URL
-        auth_url = f"{AUTH_URL}?client_id={CLIENT_ID}&response_type=code&redirect_uri={REDIRECT_URI}&scope=user-read-private"
-        return redirect(auth_url)
+def get_auth_url():
+    """Function to return the authorization URL to authenticate the user."""
+    params = {
+        'client_id': CLIENT_ID,
+        'response_type': 'code',
+        'redirect_uri': REDIRECT_URI,
+        'scope': 'user-read-private',  # Modify scopes as needed
+    }
+    url = f"{AUTH_URL}?{urlencode(params)}"
+    return url
 
-@app.route('/logout')
-def logout():
-    session.pop('access_token', None)
-    return redirect('/')
+def get_access_token(code):
+    """Function to exchange the code for an access token."""
+    payload = {
+        'grant_type': 'authorization_code',
+        'code': code,
+        'redirect_uri': REDIRECT_URI,
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
+    }
+    response = requests.post(TOKEN_URL, data=payload)
+    return response.json().get('access_token')
 
-@app.route('/callback')
-def callback():
-    code = request.args.get('code')
-    token_response = requests.post(
-        TOKEN_URL,
-        data={
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': REDIRECT_URI,
-            'client_id': CLIENT_ID,
-            'client_secret': CLIENT_SECRET
-        }
-    )
-    token_data = token_response.json()
-    access_token = token_data.get('access_token')
-    session['access_token'] = access_token
+# Get the authorization URL and print it
+print("Please navigate to this URL to authorize:", get_auth_url())
 
-    # Fetch user profile
+# The user would paste the full redirect URL here
+redirect_response = input("Paste the redirect URL here: ")
+code = redirect_response.split('code=')[1]
+
+# Use the code to get the access token
+access_token = get_access_token(code)
+print("Access token:", access_token)
+
+# Use the access token to get the user's profile
+def get_user_profile(access_token):
+    """Function to fetch the Spotify user profile using the access token."""
     headers = {'Authorization': f'Bearer {access_token}'}
-    user_profile_response = requests.get('https://api.spotify.com/v1/me', headers=headers)
-    user_profile = user_profile_response.json()
+    response = requests.get('https://api.spotify.com/v1/me', headers=headers)
+    return response.json()
 
-    # Store user profile in session or process it as needed
-    session['user_profile'] = user_profile
-
-    return redirect('/profile')
-
-
-@app.route('/profile')
-def profile():
-    user_profile = session.get('user_profile', {})
-    if not user_profile:
-        return "User profile not found. Please go to the home page and authorize again."
-
-    # Construct a simple HTML page to display user information
-    user_info_html = f"""
-    <h1>User Profile Information</h1>
-    <p><strong>Display Name:</strong> {user_profile.get('display_name')}</p>
-    <p><strong>ID:</strong> {user_profile.get('id')}</p>
-    <p><strong>Email:</strong> {user_profile.get('email')}</p>
-    <p><strong>Country:</strong> {user_profile.get('country')}</p>
-    <p><strong>Account Type:</strong> {user_profile.get('product')}</p>
-    <p><a href='/'>Go Back</a></p>
-    """
-    return user_info_html
-
-
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+# Get and print the user profile data
+user_profile = get_user_profile(access_token)
+print("User's Profile:", user_profile)

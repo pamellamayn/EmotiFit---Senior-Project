@@ -1,6 +1,6 @@
 TODO: make secure so use good cybersecurity and privacy actions
 TODO: incorporate potential data from EmotiFit and create funcitonality. Also to make code and operations smoother, goal right now was just to connect and get familair with the API's
-TODO: Give chatbot personalites such as college student, personal trainer, dj, etc. 
+TODO: Give chatbot better personalites, get feedback and tweak the concept. 
 TODO: Once connected to UI (so its not just in terminal), test run and revaluate how things should run and work
 TODO: focus on user account functionality and connecting with the database, so sessions can be saved. Compared to right now where it's done in the moment with no saving
 TODO: Play music from spotify api (the free version so snippets) based on the emotifit data and user preferences

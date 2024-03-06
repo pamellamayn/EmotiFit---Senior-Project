@@ -1,29 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, SafeAreaView, View, Image, Text, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, BackHandler } from 'react-native';
+import { ScrollView, StyleSheet, SafeAreaView, View, Image, Text, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, BackHandler, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { auth } from '../firebase';
 
 export default function Login() {
 
   const navigation = useNavigation();
 
-  //Android/iOS 'Go Back' Screen disabled for mobile devices
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+
+
+  //Makes sure that it doesn't kick user out if still logged in with refreshes
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      return true;
-    });
-    return () => backHandler.remove();
-  },[]);
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      if (user) {
+        navigation.replace('Home')
+      }
+    })
 
-  //Entering email & password information, DO NOT USE PLAINTEXT, will add MongoDB and authorization stuff later
-  const [form, setForm] = useState({
-    email: '',
-    password: '',
-  });
+    return unsubscribe
+  }, [])
 
+  //This uses Firebase to do login
   const handleLogin = () => {
-    //Implement the creating account stuff and it should go to home screen after successful login! :)
-    alert('Please enter your information!');
-  };
+    auth
+        .signInWithEmailAndPassword(email, password)
+        .then(userCredentials => {
+            const user = userCredentials.user;
+            console.log('Signed in with', user.email)
+        })
+        .catch(error => alert(error.message))
+  }
+
 
   return (
 
@@ -31,19 +40,12 @@ export default function Login() {
     //KeyboardAvoidingView does not work right now, please fix later so that keyboard is not blocking the input field.
     <SafeAreaView style={{ flex: 1, backgroundColor: '#e8ecf4' }}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={60}
-    >
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={60}>
+
       <View style={styles.container}>
         <View style={styles.header}>
-          <Image
-            alt=""
-            resizeMode="contain"
-            style={styles.headerImg}
-            source={require("../assets/logo.png")}
-          />
+
+          <Image alt="" resizeMode="contain" style={styles.headerImg} source={require("../assets/logo.png")} />
 
           <Text style={styles.title}>
             Sign in to <Text style={{ color: '#0884af' }}>EmotiFit</Text>
@@ -52,6 +54,7 @@ export default function Login() {
           <Text style={styles.subtitle}>
             Log in to access EmotiFit, or create an account!
           </Text>
+
         </View>
 
         <View style={styles.form}>
@@ -62,11 +65,10 @@ export default function Login() {
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="email-address"
-              onChangeText={email => setForm({ ...form, email })}
+              onChangeText={text => setEmail(text)}
               placeholder="EmotiFit@nevada.unr.edu"
               placeholderTextColor="#949494"
               style={styles.inputControl}
-              value={form.email}
             />
           </View>
 
@@ -75,17 +77,16 @@ export default function Login() {
 
             <TextInput
               autoCorrect={false}
-              onChangeText={password => setForm({ ...form, password })}
+              onChangeText={text => setPassword(text)}
               placeholder="Enter password here"
               placeholderTextColor="#949494"
               style={styles.inputControl}
               secureTextEntry={true}
-              value={form.password}
             />
           </View>
           <View style={styles.formAction}>
             <TouchableOpacity 
-              onPress={() => navigation.navigate('Home')}>
+              onPress={handleLogin}>
               <View style={styles.button}>
                 <Text style={styles.buttonText}>Sign in</Text>
               </View>
@@ -95,9 +96,19 @@ export default function Login() {
           <TouchableOpacity
             onPress={() => navigation.navigate("Create Account")}
             style={{ marginTop: 'auto' }}>
-            <Text style={styles.formFooter}>
+            <Text style={styles.formBottom}>
               Ready to get started?{' '}
               <Text style={{ textDecorationLine: 'underline' }}>Create an account</Text>
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+          //Added Forgot Password implementation, Firebase helps take care of it
+            onPress={() => navigation.navigate("ForgotPassword")}
+            style={{ marginTop: 'auto' }}>
+            <Text style={styles.formBottom}>
+              Forgot password?{' '}
+              <Text style={{ textDecorationLine: 'underline' }}>Reset password here</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -108,7 +119,6 @@ export default function Login() {
   );
 }
 
-//All of the UI looks written here
 const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
@@ -145,12 +155,13 @@ const styles = StyleSheet.create({
   formAction: {
     marginVertical: 24,
   },
-  formFooter: {
+  formBottom: {
     color: '#222',
     fontSize: 17,
     fontWeight: '600',
     letterSpacing: 0.15,
     textAlign: 'center',
+    marginTop: 15,
   },
   header: {
     marginVertical: 25,

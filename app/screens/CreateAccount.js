@@ -1,20 +1,29 @@
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, SafeAreaView, View, Image, Text, TouchableOpacity, TextInput } from 'react-native';
-import { NativeScreenNavigationContainer } from 'react-native-screens';
 import { useNavigation } from '@react-navigation/native';
+import { auth } from '../firebase';
 
 export default function CreateAccount() {
+
   const navigation = useNavigation();
 
-  const [form, setForm] = useState({
-    email: '',
-    password: '',
-  });
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [name, setName] = useState('')
 
-  const handleCreateAccount = () => {
-    //Implement the creating account stuff and it should go to home screen after successful login! :)
-    alert('Account created successfully!');
-  };
+
+
+  const handleSignUp = () => {
+      auth
+          .createUserWithEmailAndPassword(email, password)
+          .then(userCredentials => {
+              const user = userCredentials.user;
+
+              console.log('The display name for this user is', user.displayName)
+              console.log('Created an account with', user.email)
+          })
+          .catch(error => alert(error.message))
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#e8ecf4' }}>
@@ -39,6 +48,8 @@ export default function CreateAccount() {
 
         <View style={styles.form}>
 
+        {/*
+            //FIGURE THIS OUT SO THAT THE USER DOESN'T HAVE TO INPUT THEIR NAME AFTER THEY CREATE AN ACCOUNT
         <View style={styles.input}>
             <Text style={styles.inputLabel}>Full Name</Text>
 
@@ -46,28 +57,13 @@ export default function CreateAccount() {
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="default"
-              onChangeText={(name) => setForm({ ...form, name })}
+              onChangeText={name => setName(name)}
               placeholder="John Doe"
               placeholderTextColor="#949494"
               style={styles.inputControl}
-              value={form.name}
+              //value={form.name}
             />
-          </View>
-
-          <View style={styles.input}>
-            <Text style={styles.inputLabel}>Phone Number</Text>
-
-            <TextInput
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="number-pad"
-              onChangeText={(phoneNumber) => setForm({ ...form, phoneNumber })}
-              placeholder="(775) 012-3456"
-              placeholderTextColor="#949494"
-              style={styles.inputControl}
-              value={form.phoneNumber}
-            />
-          </View>
+          </View>*/}
 
           <View style={styles.input}>
             <Text style={styles.inputLabel}>Email address</Text>
@@ -76,11 +72,11 @@ export default function CreateAccount() {
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="email-address"
-              onChangeText={(email) => setForm({ ...form, email })}
+              onChangeText={text => setEmail(text)}
               placeholder="emotifit@nevada.unr.edu"
               placeholderTextColor="#949494"
               style={styles.inputControl}
-              value={form.email}
+              //value={form.email}
             />
           </View>
 
@@ -89,15 +85,20 @@ export default function CreateAccount() {
 
             <TextInput
               autoCorrect={false}
-              onChangeText={(password) => setForm({ ...form, password })}
+              onChangeText={text => setPassword(text)}
               placeholder="********"
               placeholderTextColor="#949494"
               style={styles.inputControl}
               secureTextEntry={true}
-              value={form.password}
+              //value={form.password}
             />
+            <Text style={styles.subtitle2}>Please enter a password with at least 6 characters, including 1 special character.</Text>
           </View>
 
+          {/*
+          
+          //FIGURE OUT A WAY TO VERIFY THAT THE PASSWORDS MATCH!!!!
+          
           <View style={styles.input}>
             <Text style={styles.inputLabel}>Confirm Password</Text>
 
@@ -108,13 +109,13 @@ export default function CreateAccount() {
               placeholderTextColor="#949494"
               style={styles.inputControl}
               secureTextEntry={true}
-              value={form.password}
+              //value={form.password}
             />
-          </View>
+          </View>*/}
 
 
           <View style={styles.formAction}>
-            <TouchableOpacity onPress={handleCreateAccount}>
+            <TouchableOpacity onPress={handleSignUp}>
               <View style={styles.button}>
                 <Text style={styles.buttonText}>Create Account</Text>
               </View>
@@ -231,7 +232,15 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
-  
+
+  subtitle2: {
+    top: 15,
+    color: '#929292',
+    fontSize: 15,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+
   title: {
     bottom: 65,
     color: '#1d1d1d',

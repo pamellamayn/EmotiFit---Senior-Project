@@ -1,3 +1,5 @@
+import websockets.*;
+
 // Reads EmotiBit data from an OSC stream and plots data in a window
 
 import oscP5.*;
@@ -22,6 +24,7 @@ float hpCut = 1; // adjusts the cut frequency of the high-pass filter
 
 OscP5 oscP5;
 FloatList dataList = new FloatList();
+WebSocket socket;
 
 // filter variables
 float lpFiltVal;
@@ -34,6 +37,7 @@ void setup() {
 
   /* start oscP5, listening for incoming messages at port 12345 */
   oscP5 = new OscP5(this,oscPort);
+  socket = new WebSocketP5(this, "ws://localhost:8081");
 }
 
 // --------------------------------------------------- //
@@ -79,7 +83,20 @@ void drawData() {
     float x2 = (n + 1) * xScale;
     float y1 = height * autoscale(dataList.get(n));
     float y2 = height * autoscale(dataList.get(n + 1));
-    line(x1, height - y1, x2, height - y2);
+    //line(x1, height - y1, x2, height - y2);
+    
+    point(x1, y1);
+    point(x2, y2);
+    
+    line(x1, y1, x2, y2);
+    
+    JSONObject json = new JSONObject();
+    
+    json.setFloat("x1", x1);
+    json.setFloat("y1", y1);
+    json.setFloat("x2", x2);
+    json.setFloat("y2", y2);
+    socket.sendMessage(json.toString());
  
   }
 }

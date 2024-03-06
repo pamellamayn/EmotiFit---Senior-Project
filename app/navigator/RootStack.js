@@ -14,9 +14,14 @@ import Welcome2 from "../screens/Welcome2";
 import HomeScreen from '../screens/Home';
 import Profile from '../screens/Profile';
 import Workout from '../screens/WorkoutData';
+import Chatbot from '../screens/Chatbot';
+import Music from '../screens/Music';
+import ForgotPassword from '../screens/ForgotPassword';
+import EditProfile from '../screens/EditProfile';
 
 const Stack = createNativeStackNavigator();
 
+//This enables for screens to move in between each other other than once the home page is loaded when the user is signed in.
 const RootStack = () => {
 
     return(
@@ -29,7 +34,12 @@ const RootStack = () => {
                 <Stack.Screen name="Create Account" component={CreateAccount} options={{headerBackTitleVisible: false}}/>
                 <Stack.Screen name="Home" component={HomeScreen} options={{headerBackVisible: false}} />
                 <Stack.Screen name="Profile" component={Profile} />
-                <Stack.Screen name="Workout Data" component={Workout} options={{headerBackTitleVisible: false}} />
+                <Stack.Screen name="Workouts" component={Workout} options={{headerBackTitleVisible: false}} />
+                <Stack.Screen name="Chatbot" component={Chatbot} options={{headerBackTitleVisible: false}} />
+                <Stack.Screen name="Music" component={Music} options={{headerBackTitleVisible: false}} />
+                <Stack.Screen name="ForgotPassword" component={ForgotPassword} options={{headerBackTitleVisible: false}} />
+                <Stack.Screen name="Edit Profile" component={EditProfile} options={{headerBackTitleVisible: false}} />
+
 
             </Stack.Navigator>
         </NavigationContainer>
